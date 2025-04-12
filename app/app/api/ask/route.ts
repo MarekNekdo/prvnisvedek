@@ -1,3 +1,4 @@
+// app/api/ask/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -20,7 +21,7 @@ export async function POST(req: NextRequest) {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      "OpenAI-Project": "prvnisvedek", // ← tady uveď název nebo ID projektu z OpenAI
+      "OpenAI-Project": process.env.OPENAI_PROJECT_ID ?? "",
     },
     body: JSON.stringify({
       model: "gpt-4",
