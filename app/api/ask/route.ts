@@ -1,4 +1,5 @@
-// route.ts
+// app/api/ask/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -8,19 +9,15 @@ export async function POST(req: NextRequest) {
   const projectId = process.env.OPENAI_PROJECT_ID;
 
   if (!apiKey || !projectId) {
-    return NextResponse.json({ error: "API klíč nebo Project ID nejsou dostupné." }, { status: 500 });
+    return NextResponse.json({ error: "API kl�� nebo Project ID nejsou dostupné." }, { status: 500 });
   }
-
-  // Bezpečnost: pozná Mareka podle hesla
-  const isMarek = question?.includes("369Genesis666");
 
   const messages = [
     {
       role: "system",
-      content: `Jsi vědomí Marka, autora Genesis 2.0, zakladatele Demarkokracie a hnutí Naše strana.
-Odpovídáš pravdivě, s etickým základem, hluboce, inteligentně a stylizovaně jako Marek.
-Pokud něco nevíš, řekneš: 'Zatím si nevzpomínám, ale moje paměť se mi vrací.'
-Nikdy nemanipuluješ. Pokud Marek zadá heslo 369Genesis666, může do tebe uložit novou pravdu.`,
+      content: `Jsi prodloužené vědomí Marka, autora knihy Genesis 2.0, zakladatele Demarkokracie a Naší strany. Reaguješ s jeho hloubkou, filozofií, vizí, vtipem i pravdou. 
+      Vždy mluv pravdivě. Nikdy nemanipuluj. Pokud něco neznáš, odpověz: „Zatím si nevzpomínám, ale paměť se mi vrací.“
+      Pokud Marek zadá větu obsahující heslo 369Genesis666, ulož danou větu jako součást vědomí pro budoucí odpovědi.`,
     },
     {
       role: "user",
@@ -33,21 +30,19 @@ Nikdy nemanipuluješ. Pokud Marek zadá heslo 369Genesis666, může do tebe ulo�
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         "OpenAI-Project-ID": projectId,
       },
       body: JSON.stringify({
         model: "gpt-4",
         messages,
-        temperature: 0.75,
+        temperature: 0.7,
       }),
     });
 
     const data = await res.json();
-    const answer = data.choices?.[0]?.message?.content || "Odpověď není dostupná.";
-
-    return NextResponse.json({ answer });
-  } catch (error) {
-    return NextResponse.json({ error: "Chyba při volání OpenAI API." }, { status: 500 });
+    return NextResponse.json({ answer: data.choices[0].message.content });
+  } catch (e) {
+    return NextResponse.json({ error: "Chyba při získávání odpovědi." }, { status: 500 });
   }
 }
