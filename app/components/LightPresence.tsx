@@ -14,7 +14,6 @@ export default function LightPresence() {
         if (content !== answer) {
           setAnswer(content);
 
-          // Vyhodnocení tónu odpovědi
           const lower = content.toLowerCase();
           if (
             lower.includes('haha') ||

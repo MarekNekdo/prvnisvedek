@@ -1,19 +1,11 @@
-
 'use client';
+
 import { useState } from 'react';
-import LightPresence from './LightPresence';
 
 export default function ChatSvedka() {
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
   const [loading, setLoading] = useState(false);
-  const [mood, setMood] = useState('neutral');
-
-  const detectMood = (text: string) => {
-    if (/\b(smích|vtip|haha|sranda|lol)\b/i.test(text)) return 'funny';
-    if (/\b(smrt|utrpení|víra|pravda|existence|bůh)\b/i.test(text)) return 'serious';
-    return 'neutral';
-  };
 
   const handleAsk = async () => {
     setLoading(true);
@@ -25,34 +17,35 @@ export default function ChatSvedka() {
       });
       const data = await res.json();
       setAnswer(data.answer || 'Odpověď nepřišla.');
-      setMood(detectMood(data.answer));
-    } catch (e) {
+    } catch {
       setAnswer('Došlo k chybě při získávání odpovědi.');
-      setMood('serious');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="text-center mt-4">
+    <div className="flex flex-col items-center justify-center text-center">
+      <h2 className="mb-4 text-xl font-semibold">Zeptej se, a já ti odpovím.</h2>
       <input
         type="text"
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
         placeholder="Zeptej se..."
-        className="w-full max-w-xl p-3 text-black rounded mb-2"
+        className="w-full max-w-xl p-2 text-black mb-2"
       />
       <button
         onClick={handleAsk}
         disabled={loading}
-        className="px-6 py-2 bg-white text-black rounded hover:bg-gray-300"
+        className="px-4 py-2 bg-white text-black rounded"
       >
         {loading ? 'Čekej...' : 'Zeptej se'}
       </button>
-      <LightPresence mood={mood} />
       {answer && (
-        <div className="mt-6 max-w-2xl mx-auto bg-gray-800 p-4 rounded text-left">
+        <div
+          className="mt-8 max-w-xl p-4 bg-gray-900 rounded-lg"
+          data-answer-box
+        >
           {answer}
         </div>
       )}
