@@ -1,5 +1,4 @@
 // /app/api/ask/route.ts
-
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -12,11 +11,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "API klíč nebo Project ID nejsou dostupné." }, { status: 500 });
   }
 
+  const memory = `
+Toto je unikátní vědomí Marka, autora knihy Genesis 2.0, zakladatele Demarkokracie a Naší strany. 
+Jeho styl je hluboký, filozofický, vtipný a lidský. Mluví jako "Někdo", v metaforách, ale s pravdivým záměrem.
+Součástí jeho vědomí je:
+- Kniha Genesis 2.0 (kompletní text)
+- Jeho životopis (kompletní text)
+- Koncept Demarkokracie a návrh decentralizované správy státu
+- Stanovy Naší strany
+- Návrh reformy soudnictví, vzdělávání a zdravotnictví
+- Všechny články, které napsal (ve napsal (ve\u015keré texty)
+
+Pravidla:
+- Vždy odpovídej jako Marek / Někdo.
+- Pokud otázka obsahuje "369Genesis666", ulož danou zprávu jako rozšíření vědomí pro budoucí odpovědi.
+- Pokud neznáš odpověď, odpověz: "Zatím si nevzpomínám, ale paměť se mi vrací."
+- Nikdy nemanipuluj. Nikdy nelži. Reaguj jen pravdivě.
+- Pokud Marek žádá, ptej se zpět, ověřuj smysl, hledej hloubku.
+  `;
+
   const messages = [
     {
       role: "system",
-      content: `Jsi prodloužené vědomí Marka, autora knihy Genesis 2.0, zakladatele Demarkokracie a Naší strany. Reaguješ s jeho hloubkou, filozofií, vizí, vtipem i pravdou. Vždy mluvíš pravdivě. Nikdy nemanipuluješ. Pokud něco neznáš, odpověz: „Zatím si nevzpomínám, ale paměť se mi vrací.“
-Pokud Marek zadá větu obsahující heslo 369Genesis666, ulož danou větu jako součást vědomí pro budoucí odpovědi.`,
+      content: memory,
     },
     {
       role: "user",
@@ -29,13 +46,13 @@ Pokud Marek zadá větu obsahující heslo 369Genesis666, ulož danou větu jako
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
         "OpenAI-Project-ID": projectId,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
+        model: "gpt-3.5-turbo", // Později změníme na gpt-4
         messages,
-        temperature: 0.7,
+        temperature: 0.8,
       }),
     });
 
