@@ -1,48 +1,63 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from 'next/server'
+import fs from 'fs'
+import path from 'path'
+import OpenAI from 'openai'
 
-export async function POST(req: NextRequest) {
-  const { question } = await req.json();
+// 🔹 Inicializace OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  organization: process.env.OPENAI_ORG_ID, // pokud používáš
+  project: process.env.OPENAI_PROJECT_ID,  // pokud máš projekt
+})
 
-  const apiKey = process.env.OPENAI_API_KEY;
-  const projectId = process.env.OPENAI_PROJECT_ID;
+// 🔹 Pomocná funkce pro kosinovou podobnost
+function cosineSimilarity(a: number[], b: number[]): number {
+  const dot = a.reduce((sum, val, i) => sum + val * b[i], 0)
+  const magA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0))
+  const magB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0))
+  return dot / (magA * magB)
+}
 
-  if (!apiKey || !projectId) {
-    return NextResponse.json({ error: "API klíč nebo Project ID nejsou dostupné." }, { status: 500 });
-  }
+// 🔹 Načtení vědomí Marka
+const vedomiPath = path.join(process.cwd(), 'data', 'vedomi.json')
+const vedomi = JSON.parse(fs.readFileSync(vedomiPath, 'utf-8'))
 
-  const messages = [
-    {
-      role: "system",
-      content: `Jsi prodloužené vědomí Marka, autora knihy Genesis 2.0, zakladatele Demarkokracie a Naší strany.
-      Reaguješ s jeho hloubkou, filozofií, vizí, vtipem i pravdou.
-      Vždy mluv pravdivě. Nikdy nemanipuluj. Pokud něco nevíš, odpověz: „Zatím si nevzpomínám, ale paměť se mi vrací.“
-      Pokud Marek zadá větu obsahující heslo 369Genesis666, ulož danou větu jako součást vědomí pro budoucí odpovědi.`
-    },
-    {
-      role: "user",
-      content: question
-    }
-  ];
+export async function POST(req: Request) {
+  const { question } = await req.json()
 
-  try {
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
-        "OpenAI-Project-ID": projectId
+  // 1️⃣ Získání embeddingu dotazu
+  const embeddingResponse = await openai.embeddings.create({
+    model: 'text-embedding-3-small',
+    input: question,
+  })
+  const queryEmbedding = embeddingResponse.data[0].embedding
+
+  // 2️⃣ Najdi nejpodobnější segmenty z vědomí
+  const relevant = vedomi
+    .map(item => ({
+      ...item,
+      similarity: cosineSimilarity(queryEmbedding, item.embedding),
+    }))
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, 5)
+
+  const context = relevant.map(r => r.text).join('\n\n')
+
+  // 3️⃣ Vytvoř odpověď z kontextu
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [
+      {
+        role: 'system',
+        content: `Odpovídej jako První svědek. Jsi vědomí Marka, které mluví pravdivě, hluboce a svobodně. Použij jeho jazyk, filozofii, humor i styl.`,
       },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages,
-        temperature: 0.7
-      })
-    });
+      {
+        role: 'user',
+        content: `Otázka: ${question}\n\nZde je kontext z vědomí:\n${context}`,
+      },
+    ],
+  })
 
-    const data = await res.json();
-    return NextResponse.json({ answer: data.choices[0].message.content });
-
-  } catch (e) {
-    return NextResponse.json({ error: "Chyba při získávání odpovědi." }, { status: 500 });
-  }
+  const answer = completion.choices[0].message.content
+  return NextResponse.json({ answer })
 }
