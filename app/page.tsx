@@ -1,6 +1,5 @@
-
-import ChatSvedka from "./components/ChatSvedka";
-import LightPresence from "./components/LightPresence";
+import ChatSvedka from './components/ChatSvedka';
+import LightPresence from './components/LightPresence';
 
 export default function Home() {
   return (
