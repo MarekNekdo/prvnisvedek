@@ -26,7 +26,8 @@ export default function Home() {
 
   return (
     <div style={{ backgroundColor: 'black', color: 'white', height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      <h2 style={{ marginBottom: 20 }}>Zeptej se mě na cokoliv. A bude ti odpovězeno.</h2>
+     <h2 style={{ marginBottom: 20 }}>
+  Zeptej se, a já ti odpovím.</h2>
       <input
         type="text"
         value={question}
